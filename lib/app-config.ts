@@ -1,12 +1,10 @@
 /**
- * No-code Digits (no-chart) app config.
+ * No-code Rise/Fall app config.
  *
- * Drives the EDITABLE parts of the real Digits app: the style variant of every
- * control (trade type, symbol picker, current tick, digit stats, contract mode,
- * stake, duration, prediction and buy) plus the order of the blocks. Digits has
- * NO chart, so every component is editable — the app header is the only fixed
- * element. The theme colour is handled by the existing branding pipeline
- * (globals.css --primary).
+ * Drives the EDITABLE parts of the real Rise/Fall app: the style variant of the
+ * Rise/Fall, Duration and Stake controls, and the order of the control rows.
+ * The symbol dropdown, chart, header and login/sign-up stay fixed. The theme
+ * colour is handled by the existing branding pipeline (globals.css --primary).
  *
  * When no config is present the app renders exactly as today (default below).
  */
@@ -16,82 +14,70 @@ import type { StyleVariant } from '@/lib/no-code-config';
 
 export type { StyleVariant };
 
-/**
- * Styleable + reorderable control blocks (each has 3 style variants). There is
- * NO chart block — digits has no chart. The header stays fixed.
- */
-export type ControlKey =
-  | 'tradeType'
-  | 'symbol'
-  | 'tick'
-  | 'digitStats'
-  | 'contractMode'
-  | 'stake'
-  | 'duration'
-  | 'prediction'
-  | 'buy';
+/** Styleable control rows (each has 3 style variants). */
+export type ControlKey = 'riseFall' | 'allowEquals' | 'stake' | 'duration' | 'buy';
 
-export interface DigitsAppConfig {
+/**
+ * Reorderable layout blocks. Same as the control keys plus `chart` — the chart +
+ * symbol-dropdown move together as a single block. The header stays fixed.
+ */
+export type BlockKey = ControlKey | 'chart';
+
+export interface RiseFallAppConfig {
   styles: {
-    tradeType: StyleVariant;
-    symbol: StyleVariant;
-    tick: StyleVariant;
-    digitStats: StyleVariant;
-    contractMode: StyleVariant;
-    stake: StyleVariant;
+    riseFall: StyleVariant;
+    allowEquals: StyleVariant;
     duration: StyleVariant;
-    prediction: StyleVariant;
+    stake: StyleVariant;
     buy: StyleVariant;
   };
-  /** Top-to-bottom order of layout blocks. */
-  order: ControlKey[];
+  /** Top-to-bottom order of layout blocks (includes `chart`). */
+  order: BlockKey[];
+  /**
+   * Chart options. `hidden` removes the price chart while keeping the symbol
+   * dropdown (rendered standalone). The series colour itself isn't configurable
+   * (SmartCharts is a Flutter canvas — theme dark/light only).
+   */
+  chart: {
+    hidden: boolean;
+  };
 }
 
-/** All control keys, in default order. */
 export const ALL_CONTROL_KEYS: ControlKey[] = [
-  'tradeType',
-  'symbol',
-  'tick',
-  'digitStats',
-  'contractMode',
+  'riseFall',
+  'allowEquals',
   'stake',
   'duration',
-  'prediction',
   'buy',
 ];
 
-export const DEFAULT_APP_CONFIG: DigitsAppConfig = {
-  styles: {
-    tradeType: 'a',
-    symbol: 'a',
-    tick: 'a',
-    digitStats: 'a',
-    contractMode: 'a',
-    stake: 'a',
-    duration: 'a',
-    prediction: 'a',
-    buy: 'a',
-  },
-  order: [...ALL_CONTROL_KEYS],
+/** All reorderable blocks, in default order (chart first). */
+export const ALL_BLOCK_KEYS: BlockKey[] = [
+  'chart',
+  'riseFall',
+  'allowEquals',
+  'stake',
+  'duration',
+  'buy',
+];
+
+export const DEFAULT_APP_CONFIG: RiseFallAppConfig = {
+  styles: { riseFall: 'a', allowEquals: 'a', duration: 'a', stake: 'a', buy: 'a' },
+  order: ['chart', 'riseFall', 'allowEquals', 'stake', 'duration', 'buy'],
+  chart: { hidden: false },
 };
 
-/** Validate + normalise an arbitrary value into a safe DigitsAppConfig. */
-export function normalizeAppConfig(value: unknown): DigitsAppConfig {
+/** Validate + normalise an arbitrary value into a safe RiseFallAppConfig. */
+export function normalizeAppConfig(value: unknown): RiseFallAppConfig {
   if (!value || typeof value !== 'object') return DEFAULT_APP_CONFIG;
-  const raw = value as Partial<DigitsAppConfig>;
-  const pickVariant = (key: ControlKey): StyleVariant =>
-    isStyleVariant(raw.styles?.[key]) ? raw.styles![key] : 'a';
-  const styles: DigitsAppConfig['styles'] = {
-    tradeType: pickVariant('tradeType'),
-    symbol: pickVariant('symbol'),
-    tick: pickVariant('tick'),
-    digitStats: pickVariant('digitStats'),
-    contractMode: pickVariant('contractMode'),
-    stake: pickVariant('stake'),
-    duration: pickVariant('duration'),
-    prediction: pickVariant('prediction'),
-    buy: pickVariant('buy'),
+  const raw = value as Partial<RiseFallAppConfig>;
+  const styles = {
+    riseFall: isStyleVariant(raw.styles?.riseFall) ? raw.styles!.riseFall : 'a',
+    allowEquals: isStyleVariant(raw.styles?.allowEquals) ? raw.styles!.allowEquals : 'a',
+    duration: isStyleVariant(raw.styles?.duration) ? raw.styles!.duration : 'a',
+    stake: isStyleVariant(raw.styles?.stake) ? raw.styles!.stake : 'a',
+    buy: isStyleVariant(raw.styles?.buy) ? raw.styles!.buy : 'a',
   };
-  const order = normalizeBlockOrder(raw.order, ALL_CONTROL_KEYS);
-  return { styles, order };
+  const order = normalizeBlockOrder(raw.order, ALL_BLOCK_KEYS);
+  return { styles, order, chart: { hidden: raw.chart?.hidden === true } };
 }
