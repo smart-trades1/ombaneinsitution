@@ -1,1 +1,1 @@
-{"styles":{"growthRate":"b","stake":"c","takeProfit":"c","info":"b","buy":"b"},"order":["chart","growthRate","stake","takeProfit","info","buy"]}
+{"styles":{"tradeType":"a","symbol":"a","tick":"a","digitStats":"a","contractMode":"a","stake":"a","duration":"a","prediction":"a","buy":"a"},"order":["tradeType","symbol","tick","digitStats","contractMode","stake","duration","prediction","buy"]}
